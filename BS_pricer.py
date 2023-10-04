@@ -16,7 +16,6 @@ from matplotlib import cm
 from time import time
 import scipy.stats as ss
 from Solvers import Thomas
-from solvers import SOR
 from CF import cf_normal
 from probabilities import Q1, Q2
 from functools import partial
@@ -228,65 +227,6 @@ class BS_pricer:
         D = sparse.diags([a, b, c], [-1, 0, 1], shape=(Nspace - 2, Nspace - 2)).tocsc()
 
         offset = np.zeros(Nspace - 2)
-
-        if solver == "spsolve":
-            if self.exercise == "European":
-                for i in range(Ntime - 2, -1, -1):
-                    offset[0] = a * V[0, i]
-                    offset[-1] = c * V[-1, i]
-                    V[1:-1, i] = spsolve(D, (V[1:-1, i + 1] - offset))
-            elif self.exercise == "American":
-                for i in range(Ntime - 2, -1, -1):
-                    offset[0] = a * V[0, i]
-                    offset[-1] = c * V[-1, i]
-                    V[1:-1, i] = np.maximum(spsolve(D, (V[1:-1, i + 1] - offset)), Payoff[1:-1])
-        elif solver == "Thomas":
-            if self.exercise == "European":
-                for i in range(Ntime - 2, -1, -1):
-                    offset[0] = a * V[0, i]
-                    offset[-1] = c * V[-1, i]
-                    V[1:-1, i] = Thomas(D, (V[1:-1, i + 1] - offset))
-            elif self.exercise == "American":
-                for i in range(Ntime - 2, -1, -1):
-                    offset[0] = a * V[0, i]
-                    offset[-1] = c * V[-1, i]
-                    V[1:-1, i] = np.maximum(Thomas(D, (V[1:-1, i + 1] - offset)), Payoff[1:-1])
-        elif solver == "SOR":
-            if self.exercise == "European":
-                for i in range(Ntime - 2, -1, -1):
-                    offset[0] = a * V[0, i]
-                    offset[-1] = c * V[-1, i]
-                    V[1:-1, i] = SOR(a, b, c, (V[1:-1, i + 1] - offset), w=1.68, eps=1e-10, N_max=600)
-            elif self.exercise == "American":
-                for i in range(Ntime - 2, -1, -1):
-                    offset[0] = a * V[0, i]
-                    offset[-1] = c * V[-1, i]
-                    V[1:-1, i] = np.maximum(
-                        SOR(
-                            a,
-                            b,
-                            c,
-                            (V[1:-1, i + 1] - offset),
-                            w=1.68,
-                            eps=1e-10,
-                            N_max=600,
-                        ),
-                        Payoff[1:-1],
-                    )
-        elif solver == "splu":
-            DD = splu(D)
-            if self.exercise == "European":
-                for i in range(Ntime - 2, -1, -1):
-                    offset[0] = a * V[0, i]
-                    offset[-1] = c * V[-1, i]
-                    V[1:-1, i] = DD.solve(V[1:-1, i + 1] - offset)
-            elif self.exercise == "American":
-                for i in range(Ntime - 2, -1, -1):
-                    offset[0] = a * V[0, i]
-                    offset[-1] = c * V[-1, i]
-                    V[1:-1, i] = np.maximum(DD.solve(V[1:-1, i + 1] - offset), Payoff[1:-1])
-        else:
-            raise ValueError("Solver is splu, spsolve, SOR or Thomas")
 
         self.price = np.interp(x0, x, V[:, 0])
         self.price_vec = V[:, 0]
