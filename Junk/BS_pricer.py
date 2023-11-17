@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from time import time
 import scipy.stats as ss
-from Solvers import Thomas
+#from Solvers import Thomas
 from CF import cf_normal
 from probabilities import Q1, Q2
 from functools import partial
